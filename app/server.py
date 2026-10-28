@@ -24,9 +24,11 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
+from dotenv import load_dotenv
 from pydantic import BaseModel
 
 ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(ROOT / ".env", override=True)  # .env beats the shell; the API key never leaves the server
 sys.path.insert(0, str(ROOT / "node_pack" / "ComfyUI-DollyGrip"))
 
 from dollygrip import presets, render, resolve_shot, sharecode, snap_frames, trajectory  # noqa: E402

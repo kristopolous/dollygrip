@@ -4,3 +4,4 @@ python-multipart>=0.0.9
 pillow>=10
 numpy>=1.26
 comfy-sdk>=0.5
+python-dotenv>=1.0
