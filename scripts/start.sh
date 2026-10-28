@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Start ComfyUI (:8188), the v2 API proxy (:8189) and the DollyGrip app (:8000).
-# Logs go to $WORK/logs. Expose port 8000 on the pod for the public link.
+# Logs go to $WORK/logs.
 set -euo pipefail
 
 REPO=$(cd "$(dirname "$0")/.." && pwd)

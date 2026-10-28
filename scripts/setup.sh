@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# One-shot setup on a fresh RunPod RTX 5090 pod (PyTorch template, CUDA 12.8+).
-#   HF_TOKEN=hf_... bash scripts/pod_setup.sh
-# Then: bash scripts/pod_start.sh
+# One-shot setup on a Linux box with an NVIDIA GPU (24GB+; CUDA 12.8+ torch).
+#   HF_TOKEN=hf_... bash scripts/setup.sh
+# Then: bash scripts/start.sh
 set -euo pipefail
 
 REPO=$(cd "$(dirname "$0")/.." && pwd)
@@ -28,4 +28,4 @@ pip install -q comfy-api-proxy -r "$REPO/app/requirements.txt" "huggingface_hub[
 if [[ -n ${HF_TOKEN:-} ]]; then hf auth login --token "$HF_TOKEN" >/dev/null; fi
 COMFYUI_DIR=$COMFY bash "$REPO/scripts/download_models.sh"
 
-echo "setup done. next: bash $REPO/scripts/pod_start.sh"
+echo "setup done. next: bash $REPO/scripts/start.sh"

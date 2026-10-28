@@ -188,8 +188,11 @@ def resolve(g: G, object_info: dict) -> list[str]:
                 problems.append(f"[{nid}] {cls}: missing required input {name!r}")
         for name, spec in specs:
             v = node["inputs"].get(name)
-            if isinstance(spec[0], list) and isinstance(v, str) and v not in spec[0]:
-                problems.append(f"[{nid}] {cls}.{name} = {v!r} not in options ({len(spec[0])} available)")
+            options = spec[0] if isinstance(spec[0], list) else None
+            if spec[0] == "COMBO" and len(spec) > 1 and isinstance(spec[1], dict):
+                options = spec[1].get("options")
+            if options is not None and isinstance(v, str) and v not in options:
+                problems.append(f"[{nid}] {cls}.{name} = {v!r} not in options ({len(options)} available)")
     return problems
 
 

@@ -13,7 +13,7 @@ IC-LoRA, so the move is specified, not hoped for.
 
 > A *dolly grip* is the crew member who pushes the camera dolly and hits the same marks on every take.
 
-Built for Comfy's **#OpenSourceHiggsfield** challenge. Everything runs locally on one RTX 5090 with open weights:
+Built for Comfy's **#OpenSourceHiggsfield** challenge. Everything runs on a single consumer GPU (RTX 4090 / 5090) with open weights:
 no partner nodes, no closed APIs.
 
 ---
@@ -106,7 +106,8 @@ tests/                         determinism / DSL / share-code tests (no GPU need
 
 ## Run it locally
 
-**You need:** an NVIDIA RTX 5090 (32 GB; NVFP4 needs Blackwell, other GPUs can use the int8 weights), Python 3.10+,
+**You need:** an NVIDIA GPU with 24 GB+ (developed on an RTX 4090 with the int8 weights; on an RTX 5090 set
+`LTX_VARIANT=nvfp4` for the faster NVFP4 build), Python 3.10+,
 a recent ComfyUI, and a Hugging Face account that has accepted the LTX-2.5 terms.
 
 ```bash
@@ -129,8 +130,19 @@ COMFY_BASE_URL=http://127.0.0.1:8189 uvicorn app.server:app --port 8000
 
 Then open http://localhost:8000.
 
-**On a RunPod 5090:** `HF_TOKEN=hf_... bash scripts/pod_setup.sh && bash scripts/pod_start.sh` installs ComfyUI and the
-nodes, downloads the weights, builds and validates the workflow against the live server, and serves the app on :8000.
+**One-shot on a fresh Linux GPU box:** `HF_TOKEN=hf_... bash scripts/setup.sh && bash scripts/start.sh` installs
+ComfyUI and the nodes, downloads the weights, builds and validates the workflow against the live server, and serves
+the app on :8000.
+
+## Hosted on the Comfy platform
+
+The hosted demo runs on [Comfy API](https://comfy.org/platform/). It's the same ComfyUI install packaged with
+`comfy build init` / `comfy build push`, released and deployed with `comfy deploy up --min 0` (scale-to-zero). The
+app is unchanged: point it at the deployment.
+
+```bash
+COMFY_BASE_URL=https://<deployment>.run.comfy.app COMFY_API_KEY=comfyui-... uvicorn app.server:app
+```
 
 **No GPU?** Run `DOLLYGRIP_BACKEND=mock uvicorn app.server:app` to get the full UI with guide-clip previews. The
 "generation" step returns the guide clip instead of an LTX render.
@@ -151,9 +163,9 @@ Built in 42 hours for the challenge (deadline Fri Oct 30, 9am PT).
 - [x] Guide-clip renderer (deterministic, CPU)
 - [x] ComfyUI node
 - [x] Web app: preset gallery, live camera-path preview + top-down plan, DSL editor, share codes, SSE job progress, takes (verified end to end on the mock backend)
-- [ ] LTX-2.5 + Cameraman spike on a 5090: does the rendered guide transfer?
-- [ ] Final `workflows/dollygrip_i2v.api.json`, built and validated against a live ComfyUI (`scripts/build_workflow.py`)
-- [ ] Hosted demo (RunPod)
+- [x] Workflow validated against live ComfyUI 0.43 (all 42 nodes and inputs; RTX 4090)
+- [ ] LTX-2.5 + Cameraman spike: does the rendered guide transfer?
+- [ ] Hosted demo on Comfy API (Builds + Deployments)
 
 ## License
 
