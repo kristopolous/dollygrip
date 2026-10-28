@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DollyGrip</title>
+  <meta name="description" content="Named camera moves as real, repeatable camera paths. Open weights, LTX-2.5.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="26" height="26"><rect x="3" y="9" width="17" height="12" rx="2"/><path d="M20 13l8-4v14l-8-4z"/><circle cx="8" cy="26" r="2.5"/><circle cx="17" cy="26" r="2.5"/></svg>
+      </span>
+      <span class="name">DollyGrip</span>
+      <span class="tag">named camera moves, as real camera paths</span>
+    </div>
+    <span id="backend" class="badge"></span>
+  </header>
+
+  <main class="layout">
+    <section class="col shot">
+      <div class="panel">
+        <h2><span class="step">1</span> Start frame</h2>
+        <label id="drop" class="drop">
+          <input id="file" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+          <img id="thumb" alt="" hidden>
+          <span id="dropText">Drop an image or click to upload<br><small>jpg / png / webp · your own or AI-generated content</small></span>
+        </label>
+        <textarea id="prompt" rows="3" placeholder="Describe the scene (optional). The camera words are added for you."></textarea>
+      </div>
+
+      <div class="panel">
+        <h2><span class="step">2</span> Camera move</h2>
+        <div id="presets" class="presets"></div>
+        <button id="more" class="linkish" type="button">More moves</button>
+        <div id="morePresets" class="presets" hidden></div>
+      </div>
+
+      <div class="panel controls">
+        <h2><span class="step">3</span> Shot</h2>
+        <div class="row">
+          <label>Duration <output id="durOut">5.0s</output></label>
+          <input id="duration" type="range" min="2" max="10" step="0.5" value="5">
+        </div>
+        <div class="row">
+          <label>Move strength <output id="strOut">1.00</output></label>
+          <input id="strength" type="range" min="0.25" max="1.5" step="0.05" value="1">
+        </div>
+        <div class="row split">
+          <div>
+            <label>Aspect</label>
+            <div class="seg" data-name="aspect">
+              <button type="button" data-v="16:9" class="on">16:9</button><button type="button" data-v="9:16">9:16</button><button type="button" data-v="1:1">1:1</button>
+            </div>
+          </div>
+          <div>
+            <label>Resolution</label>
+            <div class="seg" data-name="resolution">
+              <button type="button" data-v="720p">720p</button><button type="button" data-v="1080p" class="on">1080p</button>
+            </div>
+          </div>
+        </div>
+        <div class="row split">
+          <div>
+            <label>Guide scene</label>
+            <div class="seg" data-name="scene">
+              <button type="button" data-v="set" class="on">Set</button><button type="button" data-v="start_image_card">Your image</button>
+            </div>
+          </div>
+          <div>
+            <label for="seed">Seed</label>
+            <div class="seedrow"><input id="seed" type="number" min="0" value="42"><button id="dice" type="button" title="Random seed">⟳</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="col camera">
+      <div class="panel monitor">
+        <div class="monhead">
+          <h2>Camera path</h2>
+          <span class="hint">exactly what the model is told to do</span>
+        </div>
+        <div class="screens">
+          <div class="screen">
+            <video id="guide" muted loop playsinline autoplay></video>
+            <span id="guideBusy" class="busy" hidden>rendering path…</span>
+          </div>
+          <svg id="plan" class="plan" viewBox="-1 -1 2 2" aria-label="Top-down camera path"></svg>
+        </div>
+        <label class="dsllabel" for="dsl">Shot DSL <span id="custom" class="pill" hidden>custom</span></label>
+        <div class="dslrow">
+          <input id="dsl" spellcheck="false" autocomplete="off">
+          <button id="apply" type="button">Apply</button>
+        </div>
+        <p id="dslErr" class="err" hidden></p>
+        <div class="share">
+          <div>
+            <label>Share code</label>
+            <div class="coderow"><input id="code" readonly><button id="copy" type="button">Copy</button></div>
+          </div>
+          <div>
+            <label for="paste">Use someone's move</label>
+            <div class="coderow"><input id="paste" placeholder="dg1-…"><button id="load" type="button">Load</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel go">
+        <button id="generate" class="primary" type="button">Shoot it</button>
+        <div id="progress" class="progress" hidden><div class="bar"><i></i></div><span class="msg"></span></div>
+        <p id="jobErr" class="err" hidden></p>
+        <div id="result" class="result" hidden>
+          <video id="out" controls playsinline loop></video>
+          <div class="resactions">
+            <a id="download" class="btn" download>Download MP4</a>
+            <button id="remix" type="button" class="btn ghost">Remix: same move, new image</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel takes" id="takesPanel" hidden>
+        <h2>Takes</h2>
+        <div id="takes" class="takelist"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    Open weights only: LTX-2.5 + Cameraman IC-LoRA on ComfyUI · Apache-2.0 ·
+    <a href="https://github.com/kristopolous/dollygrip">source</a>
+  </footer>
+  <script src="/static/app.js" type="module"></script>
+</body>
+</html>
