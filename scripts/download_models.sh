@@ -23,7 +23,7 @@ case ${LTX_VARIANT:-int8} in
 esac
 get $LTX text_encoders/gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors "$M/text_encoders"
 get $LTX vae/ltx-2.5-video-vae-bf16.safetensors                                 "$M/vae"
-get $LTX vae/ltx-2.5-audio-vae-bf16.safetensors                                 "$M/vae"
+get $LTX vae/ltx-2.5-audio-vae-bf16.safetensors                                 "$M/checkpoints"  # LTXVAudioVAELoader reads checkpoints/
 get $LTX latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors "$M/latent_upscale_models"
 get Cseti/LTX2.3-22B_IC-LoRA-Cameraman_v2 LTX2.3-22B_IC-LoRA-Cameraman_v2_14000.safetensors "$M/loras"
 
