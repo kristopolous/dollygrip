@@ -90,10 +90,30 @@ someone else's exact camera path on your own image.
 There are 14 more: Arc L/R, Crane Down, Super Dolly, Robo Arm, Helicopter, Overhead, Truck L/R, Pan, Tilt,
 Dutch Angle, Handheld and Double Dolly. See `node_pack/ComfyUI-DollyGrip/dollygrip/presets.py`.
 
+## Use it in ComfyUI
+
+Install the node pack, then open **Templates → ComfyUI-DollyGrip → dollygrip_ltx25_i2v**. It's the full LTX-2.5
+two-stage image-to-video graph, grouped as Camera → Models → Prompt → Stage 1 → Stage 2 → Output. You can also
+drop **DollyGrip Camera** into your own LTX workflow:
+
+| DollyGrip Camera output | wire to |
+|---|---|
+| `guide` | `LTXAddVideoICLoRAGuide.image` (with the Cameraman IC-LoRA loaded via `LTXICLoRALoaderModelOnly`) |
+| `frames` | `EmptyLTXVLatentVideo.length`, `LTXVEmptyLatentAudio.frames_number` |
+| `fps` / `fps_int` | `LTXVConditioning.frame_rate`, `CreateVideo.fps` / `LTXVEmptyLatentAudio.frame_rate` |
+| `stage1_width/height`, `width/height` | half-res latent + start-image scale, full-res start-image scale |
+| `prompt` | `CLIPTextEncode.text` (your prompt with the move's camera words appended) |
+| `seed` | `RandomNoise.noise_seed` |
+| `trajectory_json` | per-frame camera-to-world matrices + FOV, for other camera-control models |
+
+The node is the single source of truth for the shot. Change the duration or the move there, and frame counts and
+sizes stay consistent everywhere downstream.
+
 ## Repository layout
 
 ```
 node_pack/ComfyUI-DollyGrip/   ComfyUI custom node: "DollyGrip Camera"
+  example_workflows/           drag-and-drop / template-browser workflow (LTX-2.5 + Cameraman)
   dollygrip/trajectory.py      rig, moves, easing, DSL → per-frame cameras
   dollygrip/render.py          guide-clip renderer (numpy)
   dollygrip/presets.py         named presets
