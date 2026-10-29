@@ -112,6 +112,24 @@ drop **DollyGrip Camera** into your own LTX workflow:
 The node is the single source of truth for the shot. Change the duration or the move there, and frame counts and
 sizes stay consistent everywhere downstream.
 
+## Make any workflow runnable: `resolve_workflow.py`
+
+ComfyUI's "Setup required" panel tells you what's missing. This script fixes it:
+
+```bash
+python scripts/resolve_workflow.py my_workflow.json --comfy-dir ~/ComfyUI            # show the plan
+python scripts/resolve_workflow.py my_workflow.json --comfy-dir ~/ComfyUI --apply \
+    --sample-image example.png --install-to ~/ComfyUI/user/default/workflows
+```
+
+- **Node packs:** read from each node's `cnr_id`/`ver` and installed from the Comfy Registry (or `aux_id` → git clone),
+  with their requirements.
+- **Models:** downloaded from the workflow's embedded `properties.models` URLs. Bare filenames are looked up with
+  `comfy build refs resolve` (Hugging Face + Civitai). Gated HF repos use your HF token.
+- **Anything with no public source** gets patched into a `*.resolved.json`: a close sibling model in the same folder
+  is swapped in (e.g. another distilled LoRA of the same base), unknown LoRAs are bypassed, and missing input media
+  points at a sample image.
+
 ## Repository layout
 
 ```
