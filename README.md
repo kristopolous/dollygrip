@@ -92,7 +92,10 @@ Dutch Angle, Handheld and Double Dolly. See `node_pack/ComfyUI-DollyGrip/dollygr
 
 ## Use it in ComfyUI
 
-Install the node pack, then open **Templates → ComfyUI-DollyGrip → dollygrip_ltx25_i2v**. It's the full LTX-2.5
+Install the node pack, then open **Templates → ComfyUI-DollyGrip → dollygrip_ltx25_i2v**. It opens in
+**App Mode**: start image, move, prompt, duration, strength, guide scene and seed on one screen, a Run button, and
+the video next to its camera path. Toggle to the node graph any time. Save it with a `.app.json` name to keep it in
+the Apps sidebar. It's the full LTX-2.5
 two-stage image-to-video graph, grouped as Camera → Models → Prompt → Stage 1 → Stage 2 → Output. You can also
 drop **DollyGrip Camera** into your own LTX workflow:
 

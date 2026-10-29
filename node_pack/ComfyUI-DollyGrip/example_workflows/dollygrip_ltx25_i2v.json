@@ -3622,7 +3622,74 @@
     60,
     200
    ]
-  }
+  },
+  "linearData": {
+   "inputs": [
+    [
+     2,
+     "image",
+     {
+      "description": "Start frame: your own or AI-generated image"
+     }
+    ],
+    [
+     1,
+     "preset",
+     {
+      "description": "Named camera move: a real 3D camera path, not prompt text"
+     }
+    ],
+    [
+     1,
+     "prompt",
+     {
+      "height": 90,
+      "description": "Describe the scene. The move's camera words are added for you."
+     }
+    ],
+    [
+     1,
+     "duration_s",
+     {
+      "description": "Travel is fixed per move; duration sets the speed"
+     }
+    ],
+    [
+     1,
+     "strength",
+     {
+      "description": "Scales how far the camera travels"
+     }
+    ],
+    [
+     1,
+     "scene",
+     {
+      "description": "Guide: synthetic set, your image lifted to 3D with depth, or your image as a card"
+     }
+    ],
+    [
+     1,
+     "seed",
+     {
+      "description": "Same move + image + seed = same shot"
+     }
+    ],
+    [
+     1,
+     "dsl",
+     {
+      "height": 60,
+      "description": "Advanced: write your own move, e.g. dolly_in then 50%-100%: orbit_360@0.5"
+     }
+    ]
+   ],
+   "outputs": [
+    40,
+    42
+   ]
+  },
+  "linearMode": true
  },
  "version": 0.4
 }
