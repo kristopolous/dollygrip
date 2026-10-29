@@ -153,7 +153,30 @@ def install_pack(p: dict, comfy: Path, python: str):
         subprocess.run(cmd, check=True)
 
 
+def hf_sibling(url: str, name: str) -> str | None:
+    """For a dead huggingface.co/<repo>/resolve/<rev>/<path> link, the closest-named file in that repo."""
+    if "huggingface.co/" not in url or "/resolve/" not in url:
+        return None
+    repo, rest = url.split("huggingface.co/", 1)[1].split("/resolve/", 1)
+    rev = rest.split("/", 1)[0]
+    req = urllib.request.Request(f"https://huggingface.co/api/models/{repo}/tree/{rev}?recursive=true")
+    if tok := hf_token():
+        req.add_header("Authorization", f"Bearer {tok}")
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            files = [f["path"] for f in json.load(r) if f.get("type") == "file" and f["path"].endswith(MODEL_EXT)]
+    except Exception:
+        return None
+    best = max(files, key=lambda f: _common_prefix(Path(f).name, name), default=None)
+    if best and _common_prefix(Path(best).name, name) >= 16:
+        return f"https://huggingface.co/{repo}/resolve/{rev}/{best}"
+    return None
+
+
 def download(url: str, dest: Path):
+    if dest.exists():
+        print("    already present")
+        return
     dest.parent.mkdir(parents=True, exist_ok=True)
     req = urllib.request.Request(url)
     tok = hf_token()
@@ -267,9 +290,22 @@ def main():
     for v in p["packs"].values():
         install_pack(v, comfy, args.python)
     for m in p["models"]:
-        if m["url"] and m["directory"]:
-            print(f"  model {m['directory']}/{m['name']}")
+        if not (m["url"] and m["directory"]):
+            continue
+        print(f"  model {m['directory']}/{m['name']}")
+        try:
             download(m["url"], comfy / "models" / m["directory"] / m["name"])
+            continue
+        except Exception as e:
+            print(f"    {e}; looking for a replacement")
+        alt = hf_sibling(m["url"], m["name"])
+        if alt:
+            print(f"    -> {alt.rsplit('/', 1)[-1]} (closest file in the same repo)")
+            try:
+                download(alt, comfy / "models" / m["directory"] / alt.rsplit("/", 1)[-1])
+            except Exception as e:
+                print(f"    {e}")
+        unresolved.append(m["name"])  # patch step swaps in whatever sibling landed
     available: dict[str, set[str]] = {}
     for f in (comfy / "models").rglob("*"):
         if f.is_file() and f.suffix in MODEL_EXT:
