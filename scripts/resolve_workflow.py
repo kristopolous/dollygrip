@@ -73,7 +73,7 @@ def hf_token() -> str | None:
 # ---------------------------------------------------------------- planning
 
 def plan(wf: dict, comfy: Path, server: str | None) -> dict:
-    nodes = all_nodes(wf)
+    nodes = [n for n in all_nodes(wf) if n.get("mode", 0) not in (2, 4)]  # skip muted/bypassed
     known = None
     if server:
         try:
@@ -134,6 +134,7 @@ def lookup_model(name: str, comfy_cli: str | None) -> dict | None:
 
 def install_pack(p: dict, comfy: Path, python: str):
     dest_root = comfy / "custom_nodes"
+    info = {}
     if p["cnr_id"]:
         q = f"?version={p['version']}" if p["version"] else ""
         info = http_json(f"{REGISTRY}/nodes/{p['cnr_id']}/install{q}")
@@ -147,10 +148,60 @@ def install_pack(p: dict, comfy: Path, python: str):
         subprocess.run(["git", "clone", "--depth", "1", f"https://github.com/{p['aux_id']}", str(dest)], check=True)
     req = dest / "requirements.txt"
     if req.exists():
-        uv = shutil.which("uv") or str(Path.home() / ".local/bin/uv")
-        cmd = [uv, "pip", "install", "-q", "-p", python, "-r", str(req)] if Path(uv).exists() else \
-              [python, "-m", "pip", "install", "-q", "-r", str(req)]
-        subprocess.run(cmd, check=True)
+        pip_install(python, "-r", str(req))
+    deps = info.get("dependencies") if p["cnr_id"] else None
+    if deps:
+        pip_install(python, *deps)
+    probe_pack(dest, comfy, python)
+
+
+PIP_NAMES = {"Crypto": "pycryptodome", "cv2": "opencv-python", "PIL": "pillow", "sklearn": "scikit-learn",
+             "skimage": "scikit-image", "yaml": "pyyaml", "imgutils": "dghs-imgutils", "google": "protobuf",
+             "git": "gitpython", "dateutil": "python-dateutil", "bs4": "beautifulsoup4", "fitz": "pymupdf"}
+PROBE = """
+import importlib.util, sys, traceback
+sys.path.insert(0, {comfy!r})
+import folder_paths  # noqa: F401  (ComfyUI paths, like a real load)
+spec = importlib.util.spec_from_file_location("probe_pack", {init!r}, submodule_search_locations=[{pack!r}])
+mod = importlib.util.module_from_spec(spec); sys.modules["probe_pack"] = mod
+try:
+    spec.loader.exec_module(mod)
+except ModuleNotFoundError as e:
+    print("MISSING", e.name); sys.exit(3)
+except Exception:
+    traceback.print_exc(); sys.exit(4)
+print("OK")
+"""
+
+
+def pip_install(python: str, *pkgs: str):
+    uv = shutil.which("uv") or str(Path.home() / ".local/bin/uv")
+    cmd = [uv, "pip", "install", "-q", "-p", python, *pkgs] if Path(uv).exists() else \
+          [python, "-m", "pip", "install", "-q", *pkgs]
+    subprocess.run(cmd, check=True)
+
+
+def probe_pack(pack: Path, comfy: Path, python: str, tries: int = 6) -> bool:
+    """Import the pack like ComfyUI would; install whatever module it says is missing, repeat."""
+    for _ in range(tries):
+        code = PROBE.format(comfy=str(comfy), init=str(pack / "__init__.py"), pack=str(pack))
+        r = subprocess.run([python, "-c", code], cwd=comfy, capture_output=True, text=True, timeout=300)
+        out = r.stdout.strip().splitlines()
+        if r.returncode == 0:
+            print(f"    import OK: {pack.name}")
+            return True
+        if r.returncode == 3 and out:
+            mod = out[-1].split()[-1].split(".")[0]
+            pkg = PIP_NAMES.get(mod, mod)
+            print(f"    {pack.name} needs '{mod}' -> pip install {pkg}")
+            try:
+                pip_install(python, pkg)
+            except subprocess.CalledProcessError:
+                break
+            continue
+        print(f"    import FAILED: {pack.name}\n" + "\n".join((r.stderr or r.stdout).strip().splitlines()[-6:]))
+        return False
+    return False
 
 
 def hf_sibling(url: str, name: str) -> str | None:
@@ -232,11 +283,18 @@ def patch_workflow(wf: dict, unresolved: list[dict], available: dict[str, set[st
             if not isinstance(v, str):
                 continue
             name = Path(v).name
+            props = n.setdefault("properties", {})
             if name in swap:
                 vals[i] = swap[name]
+                for m in props.get("models", []) or []:
+                    if m.get("name") == name:  # ComfyUI's missing-model check reads this too
+                        m["name"] = swap[name]
+                        if m.get("url"):
+                            m["url"] = m["url"].rsplit("/", 1)[0] + "/" + swap[name]
                 notes.append(f"{n['type']} #{n.get('id')}: {name} -> {swap[name]}")
             elif name in gone and n["type"] in LORA_LOADERS:
                 n["mode"] = 4  # bypass
+                props["models"] = [m for m in props.get("models", []) or [] if m.get("name") != name]
                 notes.append(f"{n['type']} #{n.get('id')}: bypassed (no source for {name})")
             elif sample_image and n["type"] in MEDIA_NODES and i == 0 and v in media:
                 vals[i] = sample_image
@@ -256,7 +314,9 @@ def main():
     ap.add_argument("--install-to", help="also copy the resolved workflow here (e.g. ComfyUI/user/default/workflows)")
     args = ap.parse_args()
 
-    comfy = Path(args.comfy_dir)
+    comfy = Path(args.comfy_dir).resolve()
+    if os.sep in args.python:
+        args.python = str(Path(args.python).absolute())  # keep the venv's symlinked python, just absolute
     wf = json.loads(Path(args.workflow).read_text())
     p = plan(wf, comfy, args.server)
 
