@@ -3,7 +3,7 @@ name = "comfyui-dollygrip"
 description = "Named camera moves (dolly, orbit, crash zoom, vertigo, FPV...) as real, deterministic camera paths. Renders a camera-motion guide clip for LTX IC-LoRA camera control, with a shot DSL and share codes."
 version = "0.1.0"
 license = { text = "Apache-2.0" }
-dependencies = ["numpy"]
+dependencies = ["numpy", "transformers"]  # transformers: depth model for scene=reproject
 
 [project.urls]
 Repository = "https://github.com/kristopolous/dollygrip"

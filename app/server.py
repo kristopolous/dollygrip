@@ -280,7 +280,7 @@ async def create_job(
 ):
     if aspect not in SIZES or resolution not in ("720p", "1080p"):
         raise HTTPException(400, "bad aspect/resolution")
-    if scene not in ("set", "start_image_card"):
+    if scene not in ("set", "start_image_card", "reproject"):
         raise HTTPException(400, "bad scene")
     shot = Shot(preset=preset, dsl=dsl, share_code=share_code, duration_s=duration_s, strength=strength)
     shot_dsl, _, blur, duration = resolve(shot)

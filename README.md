@@ -172,6 +172,7 @@ COMFY_BASE_URL=https://<deployment>.run.comfy.app COMFY_API_KEY=comfyui-... uvic
 | Component | Source | License |
 |---|---|---|
 | LTX-2.5 22B distilled (NVFP4), Gemma-4 12B encoder, video/audio VAEs, x2 latent upscaler | [Lightricks/LTX-2.5](https://huggingface.co/Lightricks/LTX-2.5) (gated) | LTX-2.x Community License (free commercial use under $10M annual revenue) |
+| Depth Anything V2 Small (guide mode `reproject` only) | [depth-anything/Depth-Anything-V2-Small-hf](https://huggingface.co/depth-anything/Depth-Anything-V2-Small-hf) | Apache-2.0 |
 | Cameraman IC-LoRA v2 (trained on LTX-2.3; most 2.3 IC-LoRAs run on 2.5) | [Cseti/LTX2.3-22B_IC-LoRA-Cameraman_v2](https://huggingface.co/Cseti/LTX2.3-22B_IC-LoRA-Cameraman_v2) | Author states research / non-commercial use |
 | DollyGrip code + node pack | this repo | Apache-2.0 |
 

@@ -37,7 +37,7 @@ class DollyGripCamera:
                 "height": ("INT", {"default": 1088, "min": 256, "max": 2176, "step": 32}),
                 "guide_width": ("INT", {"default": 960, "min": 256, "max": 1920, "step": 32}),
                 "guide_height": ("INT", {"default": 544, "min": 256, "max": 1088, "step": 32}),
-                "scene": (["set", "start_image_card"], {"default": "set"}),
+                "scene": (["reproject", "set", "start_image_card"], {"default": "reproject"}),
                 "prompt": ("STRING", {"multiline": True, "default": ""}),
                 "add_camera_words": ("BOOLEAN", {"default": True}),
                 "seed": ("INT", {"default": 42, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
@@ -53,11 +53,14 @@ class DollyGripCamera:
             prompt, add_camera_words, seed, dsl="", share_code="", start_image=None):
         shot, hint, blur = resolve_shot(preset, dsl, share_code)
         n = snap_frames(duration_s, fps)
-        card = None
-        if scene == "start_image_card" and start_image is not None:
-            card = start_image[0].detach().cpu().numpy().astype(np.float32)
-        frames = render.render(shot, n, float(fps), strength, _snap32(guide_width), _snap32(guide_height),
-                               card=card, motion_blur=blur)
+        gw, gh = _snap32(guide_width), _snap32(guide_height)
+        image = start_image[0].detach().cpu().numpy().astype(np.float32) if start_image is not None else None
+        if scene == "reproject" and image is not None:
+            from .dollygrip import reproject  # torch + transformers; only needed for this mode
+            frames = reproject.render(shot, n, float(fps), strength, gw, gh, image, motion_blur=blur)
+        else:
+            card = image if scene == "start_image_card" else None
+            frames = render.render(shot, n, float(fps), strength, gw, gh, card=card, motion_blur=blur)
         guide = torch.from_numpy(frames).float() / 255.0
         full_prompt = prompt.strip()
         if add_camera_words and hint:
