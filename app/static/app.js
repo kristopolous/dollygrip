@@ -320,7 +320,7 @@ function addTake(j) {
   b.type = "button";
   b.className = "take" + (j.status === "failed" ? " failed" : "");
   const label = j.params.preset || j.params.dsl;
-  b.innerHTML = j.video_url ? `<video muted loop playsinline src="${j.video_url}"></video><span></span>` : `<span></span>`;
+  b.innerHTML = j.video_url ? `<video muted loop playsinline preload="metadata" src="${j.video_url}#t=0.5"></video><span></span>` : `<span></span>`;
   b.querySelector("span").textContent = `${label} · ${j.params.duration_s}s · seed ${j.params.seed}`;
   const v = b.querySelector("video");
   if (v) { b.onmouseenter = () => v.play().catch(() => {}); b.onmouseleave = () => v.pause(); }
@@ -328,10 +328,55 @@ function addTake(j) {
   $("#takes").prepend(b);
 }
 
+// ------------------------------------------------------------ samples & examples
+
+const EXAMPLES = [
+  { clip: "dolly_zoom", label: "Dolly Zoom (Vertigo)", note: "subject holds size, kitchen stretches behind it", verdict: "works" },
+  { clip: "crash_zoom_in", label: "Crash Zoom In", note: "holds, then snaps in on the beat of the guide", verdict: "works" },
+  { clip: "dolly_in", label: "Dolly In", note: "real push with background parallax", verdict: "works" },
+  { clip: "dolly_in_lighthouse", guide: null, label: "Dolly In · landscape", note: "made through this app", verdict: "works" },
+  { clip: "orbit_360", label: "360 Orbit", note: "timing transfers, but LTX turns the subject instead of circling the camera", verdict: "partial" },
+];
+
+function renderExamples() {
+  const box = $("#examples");
+  for (const ex of EXAMPLES) {
+    const d = document.createElement("div");
+    d.className = "ex";
+    const guide = ex.guide === null ? "" : `<video class="g" src="/static/examples/${ex.clip}.guide.mp4" muted loop playsinline autoplay></video>`;
+    d.innerHTML = `<div class="pair"><video src="/static/examples/${ex.clip}.mp4" muted loop playsinline autoplay preload="metadata"></video>${guide}</div>
+      <div class="cap"><b></b><span></span> <span class="verdict"></span></div>`;
+    d.querySelector("b").textContent = ex.label;
+    d.querySelector(".cap span").textContent = ex.note;
+    d.querySelector(".verdict").textContent = ex.verdict === "works" ? "" : "· " + ex.verdict;
+    box.appendChild(d);
+  }
+}
+
+function bindSamples() {
+  document.querySelectorAll(".sample").forEach((b) => {
+    b.addEventListener("click", async () => {
+      const r = await fetch(`/static/samples/${b.dataset.name}.jpg`);
+      const blob = await r.blob();
+      const f = new File([blob], `${b.dataset.name}.jpg`, { type: "image/jpeg" });
+      state.file = f;
+      state.imageId = "";
+      const img = $("#thumb");
+      img.src = URL.createObjectURL(f);
+      img.hidden = false;
+      $("#dropText").hidden = true;
+      if (!$("#prompt").value.trim()) $("#prompt").value = b.dataset.prompt;
+      document.querySelectorAll(".sample").forEach((x) => x.classList.toggle("on", x === b));
+    });
+  });
+}
+
 // ------------------------------------------------------------ boot
 
 async function boot() {
   bindInputs();
+  bindSamples();
+  renderExamples();
   updateOutputs();
   const info = await api("/api/presets");
   presets = info.presets;
@@ -346,7 +391,7 @@ async function boot() {
     $("#paste").value = move;
     refreshPreview();
   } else {
-    selectPreset("orbit_360");
+    selectPreset("dolly_zoom");
   }
   const past = await api("/api/jobs").catch(() => ({ jobs: [] }));
   for (const j of past.jobs.reverse()) if (j.status === "succeeded") addTake(j);

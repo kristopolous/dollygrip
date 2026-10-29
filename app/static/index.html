@@ -30,6 +30,12 @@
           <img id="thumb" alt="" hidden>
           <span id="dropText">Drop an image or click to upload<br><small>jpg / png / webp · your own or AI-generated content</small></span>
         </label>
+        <div class="samples">
+          <span>or try:</span>
+          <button type="button" class="sample" data-name="robot" data-prompt="a small friendly retro tin toy robot standing on a wooden desk in a cozy workshop, warm lamp light"><img src="/static/samples/robot.jpg" alt="Tin robot"></button>
+          <button type="button" class="sample" data-name="espresso" data-prompt="product photo of a glossy red vintage espresso machine on a white marble kitchen counter, soft morning light"><img src="/static/samples/espresso.jpg" alt="Espresso machine"></button>
+          <button type="button" class="sample" data-name="lighthouse" data-prompt="a white lighthouse on a rocky cliff above a turquoise sea at golden hour, dramatic clouds"><img src="/static/samples/lighthouse.jpg" alt="Lighthouse"></button>
+        </div>
         <textarea id="prompt" rows="3" placeholder="Describe the scene (optional). The camera words are added for you."></textarea>
       </div>
 
@@ -83,7 +89,7 @@
       <div class="panel monitor">
         <div class="monhead">
           <h2>Camera path</h2>
-          <span class="hint">exactly what the model is told to do</span>
+          <span class="hint">preview on a synthetic set. Your video uses your image; this is just the move.</span>
         </div>
         <div class="screens">
           <div class="screen">
@@ -121,6 +127,11 @@
             <button id="remix" type="button" class="btn ghost">Remix: same move, new image</button>
           </div>
         </div>
+      </div>
+
+      <div class="panel examples">
+        <h2>Real renders · LTX-2.5 on one RTX 4090</h2>
+        <div id="examples" class="exlist"></div>
       </div>
 
       <div class="panel takes" id="takesPanel" hidden>
