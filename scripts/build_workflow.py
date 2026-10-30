@@ -32,7 +32,9 @@ OUT = ROOT / "workflows" / "dollygrip_i2v.api.json"
 VARIANT = os.environ.get("LTX_VARIANT", "int8")
 MODELS = {
     "unet": {"nvfp4": "ltx-2.5-22b-distilled-transformer-nvfp4.safetensors",
-             "int8": "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors"}[VARIANT],
+             "int8": "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
+             # unsloth/LTX-2.5-GGUF via ComfyUI-GGUF: 13.6GB, stays resident on a 24GB card
+             "gguf": "ltx-2.5-22b-distilled-Q4_K_M.gguf"}[VARIANT],
     "text_encoder": "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
     "video_vae": "ltx-2.5-video-vae-bf16.safetensors",
     "audio_vae": "ltx-2.5-audio-vae-bf16.safetensors",
@@ -68,7 +70,7 @@ def out(nid, idx=0):
 def build() -> G:
     g = G()
     cam = g.add("DollyGripCamera", "DG Camera", preset="dolly_in", duration_s=5.0, fps=24, strength=1.0,
-                width=1920, height=1088, guide_width=960, guide_height=544, scene="set", prompt="",
+                width=1920, height=1088, guide_width=0, guide_height=0, scene="set", prompt="",
                 add_camera_words=True, seed=42, dsl="", share_code="")
     # DollyGripCamera outputs
     GUIDE, FRAMES, FPS_INT, FPS, W, H, W1, H1, PROMPT, SEED = range(10)
@@ -76,9 +78,15 @@ def build() -> G:
     img = g.add("LoadImage", "DG Start Image", image="example.png")
     g.nodes[cam]["inputs"]["start_image"] = out(img)
 
-    unet = g.add("UNETLoader", unet_name=MODELS["unet"], weight_dtype="default")
+    if VARIANT == "gguf":
+        unet = g.add("UnetLoaderGGUF", unet_name=MODELS["unet"])
+    else:
+        unet = g.add("UNETLoader", unet_name=MODELS["unet"], weight_dtype="default")
     model_ic = g.add("LTXICLoRALoaderModelOnly", positional=[MODELS["cameraman"], 1.0], model=out(unet))
-    clip = g.add("CLIPLoader", clip_name=MODELS["text_encoder"], type="ltxv", device="default")
+    # Text encoder on the CPU: one prompt encodes in seconds, and the 24GB card then keeps the
+    # video model resident between runs instead of swapping ~37GB in and out every time.
+    clip = g.add("CLIPLoader", clip_name=MODELS["text_encoder"], type="ltxv",
+                 device=os.environ.get("TE_DEVICE", "cpu"))
     vae = g.add("VAELoader", vae_name=MODELS["video_vae"])
     avae = g.add("LTXVAudioVAELoader", ckpt_name=MODELS["audio_vae"])
 
@@ -127,7 +135,10 @@ def build() -> G:
                sigmas=out(g.add("ManualSigmas", sigmas=STAGE2_SIGMAS)),
                latent_image=out(av2))
     sep2 = g.add("LTXVSeparateAVLatent", av_latent=out(s2, 0))
-    frames = g.add("VAEDecode", samples=out(sep2, 0), vae=out(vae))
+    # Tiled on the GPU from the start: a plain 1080p decode OOMs on 24GB and ComfyUI's
+    # fallback then decodes on the CPU (GPU idle, minutes per clip).
+    frames = g.add("VAEDecodeTiled", samples=out(sep2, 0), vae=out(vae), tile_size=512, overlap=64,
+                   temporal_size=64, temporal_overlap=8)
     audio = g.add("LTXVAudioVAEDecode", samples=out(sep2, 1), audio_vae=out(avae))
     video = g.add("CreateVideo", images=out(frames), fps=out(cam, FPS), audio=out(audio))
     g.add("SaveVideo", "DG Output", video=out(video), filename_prefix="dollygrip/shot", format="mp4", codec="h264")

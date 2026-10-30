@@ -17,7 +17,9 @@ get() {  # repo  path-in-repo  dest-dir
 
 LTX=Lightricks/LTX-2.5
 # LTX_VARIANT=nvfp4 for Blackwell (RTX 5090, 18.7GB); int8 for Ada/Ampere (RTX 4090, 21.5GB).
+# LTX_VARIANT=gguf: unsloth Q4_K_M (13.6GB) via ComfyUI-GGUF; stays resident next to the text encoder on 24GB.
 case ${LTX_VARIANT:-int8} in
+  gguf)  get unsloth/LTX-2.5-GGUF distilled/ltx-2.5-22b-distilled-Q4_K_M.gguf "$M/diffusion_models" ;;
   nvfp4) get $LTX diffusion_models/ltx-2.5-22b-distilled-transformer-nvfp4.safetensors "$M/diffusion_models" ;;
   int8)  get $LTX diffusion_models/ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors "$M/diffusion_models" ;;
 esac

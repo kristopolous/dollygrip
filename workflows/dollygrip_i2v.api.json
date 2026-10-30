@@ -8,8 +8,8 @@
       "strength": 1.0,
       "width": 1920,
       "height": 1088,
-      "guide_width": 960,
-      "guide_height": 544,
+      "guide_width": 0,
+      "guide_height": 0,
       "scene": "set",
       "prompt": "",
       "add_camera_words": true,
@@ -35,10 +35,9 @@
     }
   },
   "3": {
-    "class_type": "UNETLoader",
+    "class_type": "UnetLoaderGGUF",
     "inputs": {
-      "unet_name": "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
-      "weight_dtype": "default"
+      "unet_name": "ltx-2.5-22b-distilled-Q4_K_M.gguf"
     }
   },
   "4": {
@@ -501,7 +500,7 @@
     }
   },
   "37": {
-    "class_type": "VAEDecode",
+    "class_type": "VAEDecodeTiled",
     "inputs": {
       "samples": [
         "36",
@@ -510,7 +509,11 @@
       "vae": [
         "6",
         0
-      ]
+      ],
+      "tile_size": 512,
+      "overlap": 64,
+      "temporal_size": 64,
+      "temporal_overlap": 8
     }
   },
   "38": {

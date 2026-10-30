@@ -213,7 +213,8 @@ def run_comfy(job: Job, p: dict):
         return titles[title]
 
     cam = node("DG Camera")
-    (w, h), (gw, gh) = SIZES[p["aspect"]][p["resolution"]], SIZES[p["aspect"]]["guide"]
+    w, h = SIZES[p["aspect"]][p["resolution"]]
+    gw = gh = 0  # node matches the guide to the stage-1 latent size
     for k, v in {
         "preset": p["preset"] if p["preset"] in presets.PRESET_IDS else "dolly_in",
         "dsl": p["dsl"] if p["custom"] else "", "share_code": "", "duration_s": p["duration_s"], "fps": FPS,

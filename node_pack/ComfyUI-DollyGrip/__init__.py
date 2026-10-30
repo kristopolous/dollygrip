@@ -35,8 +35,9 @@ class DollyGripCamera:
                 "strength": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 2.0, "step": 0.05}),
                 "width": ("INT", {"default": 1920, "min": 256, "max": 3840, "step": 32}),
                 "height": ("INT", {"default": 1088, "min": 256, "max": 2176, "step": 32}),
-                "guide_width": ("INT", {"default": 960, "min": 256, "max": 1920, "step": 32}),
-                "guide_height": ("INT", {"default": 544, "min": 256, "max": 1088, "step": 32}),
+                # 0 = match the stage-1 (half-res) latent size, as the IC-LoRA guide must.
+                "guide_width": ("INT", {"default": 0, "min": 0, "max": 1920, "step": 32}),
+                "guide_height": ("INT", {"default": 0, "min": 0, "max": 1088, "step": 32}),
                 "scene": (["reproject", "set", "start_image_card"], {"default": "reproject"}),
                 "prompt": ("STRING", {"multiline": True, "default": ""}),
                 "add_camera_words": ("BOOLEAN", {"default": True}),
@@ -53,7 +54,10 @@ class DollyGripCamera:
             prompt, add_camera_words, seed, dsl="", share_code="", start_image=None):
         shot, hint, blur = resolve_shot(preset, dsl, share_code)
         n = snap_frames(duration_s, fps)
-        gw, gh = _snap32(guide_width), _snap32(guide_height)
+        w, h = _snap32(width), _snap32(height)
+        s1w, s1h = _snap32(w / 2), _snap32(h / 2)
+        gw = _snap32(guide_width) if guide_width else s1w
+        gh = _snap32(guide_height) if guide_height else s1h
         image = start_image[0].detach().cpu().numpy().astype(np.float32) if start_image is not None else None
         if scene == "reproject" and image is not None:
             from .dollygrip import reproject  # torch + transformers; only needed for this mode
@@ -66,8 +70,7 @@ class DollyGripCamera:
         if add_camera_words and hint:
             full_prompt = f"{full_prompt}. {hint}." if full_prompt else f"{hint}."
         traj = trajectory.build(shot, n, float(fps), strength)
-        w, h = _snap32(width), _snap32(height)
-        return (guide, n, int(fps), float(fps), w, h, _snap32(w / 2), _snap32(h / 2),
+        return (guide, n, int(fps), float(fps), w, h, s1w, s1h,
                 full_prompt, seed, json.dumps(traj.to_json()), sharecode.encode(shot, strength, duration_s))
 
 
