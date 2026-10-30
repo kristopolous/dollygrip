@@ -33,8 +33,8 @@ class DollyGripCamera:
                 "duration_s": ("FLOAT", {"default": 5.0, "min": 1.0, "max": 20.0, "step": 0.1}),
                 "fps": ("INT", {"default": 24, "min": 8, "max": 50}),
                 "strength": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 2.0, "step": 0.05}),
-                "width": ("INT", {"default": 1920, "min": 256, "max": 3840, "step": 32}),
-                "height": ("INT", {"default": 1088, "min": 256, "max": 2176, "step": 32}),
+                "width": ("INT", {"default": 768, "min": 256, "max": 3840, "step": 64}),
+                "height": ("INT", {"default": 448, "min": 256, "max": 2176, "step": 64}),
                 # 0 = match the stage-1 (half-res) latent size, as the IC-LoRA guide must.
                 "guide_width": ("INT", {"default": 0, "min": 0, "max": 1920, "step": 32}),
                 "guide_height": ("INT", {"default": 0, "min": 0, "max": 1088, "step": 32}),

@@ -29,7 +29,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "workflows" / "dollygrip_i2v.api.json"
 
 # LTX_VARIANT=nvfp4 for Blackwell (RTX 5090), int8 for Ada/Ampere (RTX 4090/3090).
-VARIANT = os.environ.get("LTX_VARIANT", "int8")
+VARIANT = os.environ.get("LTX_VARIANT", "gguf")
 MODELS = {
     "unet": {"nvfp4": "ltx-2.5-22b-distilled-transformer-nvfp4.safetensors",
              "int8": "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
@@ -70,7 +70,7 @@ def out(nid, idx=0):
 def build() -> G:
     g = G()
     cam = g.add("DollyGripCamera", "DG Camera", preset="dolly_in", duration_s=5.0, fps=24, strength=1.0,
-                width=1920, height=1088, guide_width=0, guide_height=0, scene="set", prompt="",
+                width=768, height=448, guide_width=0, guide_height=0, scene="set", prompt="",
                 add_camera_words=True, seed=42, dsl="", share_code="")
     # DollyGripCamera outputs
     GUIDE, FRAMES, FPS_INT, FPS, W, H, W1, H1, PROMPT, SEED = range(10)

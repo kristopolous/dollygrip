@@ -42,10 +42,10 @@ for d in ("previews", "uploads", "jobs"):
 
 FPS = 24
 PREVIEW_SIZE = (384, 224)
-SIZES = {  # aspect -> {resolution: (w, h)}, guide (w, h); all divisible by 32
-    "16:9": {"720p": (1280, 704), "1080p": (1920, 1088), "guide": (960, 544)},
-    "9:16": {"720p": (704, 1280), "1080p": (1088, 1920), "guide": (544, 960)},
-    "1:1": {"720p": (960, 960), "1080p": (1440, 1440), "guide": (768, 768)},
+SIZES = {  # aspect -> {resolution: (w, h)}; multiples of 64 so the half-res stage 1 stays /32
+    "16:9": {"448p": (768, 448), "576p": (1024, 576), "720p": (1280, 704)},
+    "9:16": {"448p": (448, 768), "576p": (576, 1024), "720p": (704, 1280)},
+    "1:1": {"448p": (512, 512), "576p": (640, 640), "720p": (960, 960)},
 }
 
 app = FastAPI(title="DollyGrip")
@@ -192,7 +192,7 @@ def run_mock(job: Job, p: dict):
         time.sleep(0.15)
         job.update(status="running", progress=(i + 1) / steps * 0.7, message="Sampling (mock)")
     job.update(message="Rendering guide as stand-in output", progress=0.8)
-    w, h = SIZES[p["aspect"]]["guide"]
+    w, h = SIZES[p["aspect"]]["448p"]
     card = load_card(Path(p["image_path"])) if p["image_path"] else None
     frames = render.render(p["dsl"], p["frames"], FPS, p["strength"], w, h, card=card, motion_blur=p["blur"])
     out = OUTPUTS / "jobs" / f"{job.id}.mp4"
@@ -274,12 +274,12 @@ async def create_job(
     share_code: str = Form(""),
     duration_s: float = Form(5.0),
     strength: float = Form(1.0),
-    resolution: str = Form("1080p"),
+    resolution: str = Form("448p"),
     aspect: str = Form("16:9"),
     scene: str = Form("set"),
     seed: int = Form(42),
 ):
-    if aspect not in SIZES or resolution not in ("720p", "1080p"):
+    if aspect not in SIZES or resolution not in SIZES[aspect]:
         raise HTTPException(400, "bad aspect/resolution")
     if scene not in ("set", "start_image_card", "reproject"):
         raise HTTPException(400, "bad scene")

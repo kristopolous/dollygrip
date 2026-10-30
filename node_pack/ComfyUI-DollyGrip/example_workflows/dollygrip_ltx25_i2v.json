@@ -265,10 +265,10 @@
     5,
     24,
     1,
-    1920,
-    1088,
-    960,
-    544,
+    768,
+    448,
+    0,
+    0,
     "set",
     "",
     true,
@@ -362,7 +362,7 @@
   },
   {
    "id": 3,
-   "type": "UNETLoader",
+   "type": "UnetLoaderGGUF",
    "pos": [
     490,
     0
@@ -383,15 +383,6 @@
       "name": "unet_name"
      },
      "link": null
-    },
-    {
-     "localized_name": "weight_dtype",
-     "name": "weight_dtype",
-     "type": "COMBO",
-     "widget": {
-      "name": "weight_dtype"
-     },
-     "link": null
     }
    ],
    "outputs": [
@@ -406,11 +397,10 @@
     }
    ],
    "properties": {
-    "Node name for S&R": "UNETLoader"
+    "Node name for S&R": "UnetLoaderGGUF"
    },
    "widgets_values": [
-    "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
-    "default"
+    "ltx-2.5-22b-distilled-Q4_K_M.gguf"
    ],
    "widgets_values_named": {
     "unet_name": "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
@@ -546,7 +536,7 @@
    "widgets_values": [
     "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
     "ltxv",
-    "default"
+    "cpu"
    ],
    "widgets_values_named": {
     "clip_name": "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
@@ -2437,7 +2427,7 @@
   },
   {
    "id": 37,
-   "type": "VAEDecode",
+   "type": "VAEDecodeTiled",
    "pos": [
     3049.882525634766,
     0
@@ -2474,8 +2464,14 @@
     }
    ],
    "properties": {
-    "Node name for S&R": "VAEDecode"
-   }
+    "Node name for S&R": "VAEDecodeTiled"
+   },
+   "widgets_values": [
+    512,
+    64,
+    64,
+    8
+   ]
   },
   {
    "id": 38,

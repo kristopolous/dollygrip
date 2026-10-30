@@ -6,8 +6,8 @@
       "duration_s": 5.0,
       "fps": 24,
       "strength": 1.0,
-      "width": 1920,
-      "height": 1088,
+      "width": 768,
+      "height": 448,
       "guide_width": 0,
       "guide_height": 0,
       "scene": "set",
@@ -56,7 +56,7 @@
     "inputs": {
       "clip_name": "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
       "type": "ltxv",
-      "device": "default"
+      "device": "cpu"
     }
   },
   "6": {

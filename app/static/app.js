@@ -9,7 +9,7 @@ const state = {
   duration: 5,
   strength: 1,
   aspect: "16:9",
-  resolution: "1080p",
+  resolution: "448p",
   scene: "set",
   seed: 42,
   file: null,
